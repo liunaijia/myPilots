@@ -7,7 +7,11 @@
     "csvtojson": "^1.1.7",
     "ml-regression": "^4.4.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^4.1.1",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "eslint-plugin-import": "^2.7.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
