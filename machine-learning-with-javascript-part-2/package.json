@@ -1,0 +1,21 @@
+{
+  "name": "machine-learning-with-javascript-part-2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csvtojson": "^1.1.7",
+    "ml-knn": "^2.0.0",
+    "prompt": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.1.1",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "eslint-plugin-import": "^2.7.0"
+  }
+}
