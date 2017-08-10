@@ -1,0 +1,15 @@
+{
+    "manifest_version": 2,
+    "name": "StockEye",
+    "description": "",
+    "version": "0.1",
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "http://hq.sinajs.cn/*",
+        "notifications"
+    ]
+}
