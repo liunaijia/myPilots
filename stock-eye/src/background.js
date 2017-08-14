@@ -35,6 +35,8 @@ const runDuringTradeTime = async (block) => {
     const now = new Date();
     if (isTradeTime(now)) {
       await block();
+    } else {
+      setBadge('');
     }
   } catch (e) {
     console.error(e);
