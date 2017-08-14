@@ -22,6 +22,10 @@ const process = (stocks = [{ buyingRatio: 0, sellingRatio: 0 }]) => {
 
 const sendNotification = (title = '', message = '') => {
   chrome.notifications.create({ type: 'basic', title, message, iconUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7' });
+  // An easier way for notification is using Notification WebAPI:
+  // `new Notification(title, { body });`
+  // However the messages sent by Notification API come up with the website domain which is
+  // needless.
 };
 
 const sendDecision = ({ delta = 0, buy: [buyCode, buyPrice], sell: [sellCode, sellPrice] }) => {
@@ -55,4 +59,5 @@ runDuringTradeTime(async () => {
     console.log(decision);
   }
 });
+
 sendNotification('StockEye 启动');
