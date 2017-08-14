@@ -11,5 +11,8 @@
     "permissions": [
         "http://hq.sinajs.cn/*",
         "notifications"
-    ]
+    ],
+    "browser_action": {
+        
+    }
 }
