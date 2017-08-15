@@ -2,6 +2,7 @@ import isTradeTime from './tradeTime';
 import { STOCK_POOL, THRESHOLD } from './settings';
 import fetchStockData from './stockData';
 import { setBadge, sendNotification } from './chromeApi';
+import { login, buyStock, holdings, welcome } from './newoneApi';
 
 const process = (stocks = [{ buyingRatio: 0, sellingRatio: 0 }]) => {
   const stockMayBuy = stocks.sort((a, b) => a.sellingRatio - b.sellingRatio)[0];
@@ -25,7 +26,7 @@ const process = (stocks = [{ buyingRatio: 0, sellingRatio: 0 }]) => {
 const sendDecision = ({ gap = 0, buy: [buyCode, buyPrice], sell: [sellCode, sellPrice] }) => {
   const title = `价差${gap}%`;
   const message = `买${STOCK_POOL[buyCode]} ${buyPrice}，卖${STOCK_POOL[sellCode]} ${sellPrice}`;
-  sendNotification(title, message);
+  sendNotification({ title, message });
 };
 
 const sleep = async seconds => new Promise(resolve => setTimeout(resolve, seconds * 1000));
@@ -40,7 +41,7 @@ const runDuringTradeTime = async (block) => {
     }
   } catch (e) {
     console.error(e);
-    sendNotification(e.message);
+    sendNotification({ title: e.message });
   } finally {
     await sleep(3);
     runDuringTradeTime(block);
@@ -56,4 +57,11 @@ runDuringTradeTime(async () => {
   }
 });
 
-sendNotification('StockEye 启动');
+sendNotification({ title: 'StockEye 启动' });
+
+login().then(() => holdings());
+// login();
+// welcome();
+// holdings();
+// buyStock('sh601988');
+
