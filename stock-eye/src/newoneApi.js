@@ -123,7 +123,10 @@ const buyStock = async (stockCode = '') => {
 
 const parseHoldings = async (response) => {
   const dom = await readAsDom(response);
-  return dom;
+  const balance = parseFloat(dom.querySelector('#zongzichan').innerText.match(/可用：\s*([\d|.]+)/)[1]);
+  return {
+    balance,
+  };
 };
 
 const holdings = async () => {
