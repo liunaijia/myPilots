@@ -105,20 +105,61 @@ const login = async () => {
   throw new Error('fail to login: incorrect captcha');
 };
 
-const welcome = async () => {
-  const response = sendRequest(`/xtrade?random=${new Date().getTime()}`, { jybm: 100027 });
-  if (!response.ok) {
-    throw new Error(`fail to load welcome page: ${response.statusText}`);
-  }
-
-  const text = await readAsText(response);
-  console.log(text);
+const parseStockType = (stockCode = '') => {
+  if (stockCode.startsWith('sh')) { return '1'; }
+  if (stockCode.startsWith('sz')) { return '2'; }
+  throw new Error(`Unknown stock code: ${stockCode}`);
 };
 
-const buyStock = async (stockCode = '') => {
-  const response = await sendRequest(`/newtrade/func/getWDData.jsp?random=${new Date().getTime()}`, { zqdm: stockCode });
+const getAccountCode = async (stockCode = '', tradeType = '') => {
+  const stockType = parseStockType(stockCode);
+
+  const payload = { jybm: '' };
+  if (tradeType === 'buy') { payload.jybm = '100010'; } else if (tradeType === 'sell') { payload.jybm = '100020'; } else throw new Error(`Unknown trade type ${tradeType}`);
+
+  const response = await sendRequest(`/xtrade?random=${new Date().getTime()}`, payload);
+  const dom = await readAsDom(response);
+
+  const matchedNode = Array.from(dom.querySelectorAll('#gddm option')).find(node => node.attributes.sscdm.value === stockType);
+  if (matchedNode) {
+    return matchedNode.value;
+  }
+
+  throw new Error(`Cannot find the account code matched with: ${stockCode}`);
+};
+
+const buyStock = async (stockCode = '', price = 0.0, amount = 0) => {
+  const accountCode = await getAccountCode(stockCode, 'buy'); // double check the parameter
+
+  const response = await sendRequest(`/xtrade?random=${new Date().getTime()}`, {
+    jybm: '100012',
+    mmlb: '1', // 交易类型：买
+    gddm: accountCode,
+    zqdm: stockCode.match(/\d{6}$/)[0],
+    wtjg: price,
+    wtsl: amount,
+  });
   const text = await readAsText(response);
-  console.log(text);
+  if (!text.includes('您的申请已提交')) {
+    throw new Error(`Fail to buy stock ${stockCode} ${price} ${amount}, ${text}`);
+  }
+};
+
+const sellStock = async (stockCode = '', price = 0.0, amount = 0) => {
+  const accountCode = await getAccountCode(stockCode, 'sell'); // double check the parameter
+
+  const response = await sendRequest(`/xtrade?random=${new Date().getTime()}`, {
+    jybm: '100012',
+    mmlb: '2', // 交易类型：卖
+    gddm: accountCode,
+    zqdm: stockCode.match(/\d{6}$/)[0],
+    wtjg: price,
+    wtsl: amount,
+  });
+  const text = await readAsText(response);
+  if (!text.includes('您的申请已提交')) {
+    throw new Error(`Fail to sell stock ${stockCode} ${price} ${amount}, ${text}`);
+  }
 };
 
 const parseHoldings = async (response) => {
@@ -134,6 +175,5 @@ const holdings = async () => {
   return parseHoldings(response);
 };
 
-
-export { login, buyStock, holdings, welcome };
+export { login, buyStock, holdings, sellStock };
 

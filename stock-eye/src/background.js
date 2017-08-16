@@ -2,13 +2,15 @@ import isTradeTime from './tradeTime';
 import { STOCK_POOL, THRESHOLD } from './settings';
 import fetchStockData from './stockData';
 import { setBadge, sendNotification } from './chromeApi';
-import { login, buyStock, holdings, welcome } from './newoneApi';
+import { login, buyStock, holdings, sellStock } from './newoneApi';
 
 const process = (stocks = [{ buyingRatio: 0, sellingRatio: 0 }]) => {
   const stockMayBuy = stocks.sort((a, b) => a.sellingRatio - b.sellingRatio)[0];
   const stockMaySell = stocks.sort((a, b) => b.buyingRatio - a.buyingRatio)[0];
 
   const gap = Math.round((stockMaySell.buyingRatio - stockMayBuy.sellingRatio) * 100) / 100;
+  setBadge(gap.toString());
+
   if (gap > THRESHOLD) {
     return {
       gap,
@@ -18,8 +20,7 @@ const process = (stocks = [{ buyingRatio: 0, sellingRatio: 0 }]) => {
     };
   }
 
-  console.log(`${gap} B:${STOCK_POOL[stockMayBuy.code]}${stockMayBuy.sellingRatio}% S:${STOCK_POOL[stockMaySell.code]}${stockMaySell.buyingRatio}%`);
-  setBadge(gap.toString());
+  // console.log(`${gap} B:${STOCK_POOL[stockMayBuy.code]}${stockMayBuy.sellingRatio}% S:${STOCK_POOL[stockMaySell.code]}${stockMaySell.buyingRatio}%`);
   return null;
 };
 
@@ -59,9 +60,8 @@ runDuringTradeTime(async () => {
 
 sendNotification({ title: 'StockEye 启动' });
 
-login().then(() => holdings());
-// login();
-// welcome();
-// holdings();
-// buyStock('sh601988');
+// login().then(() => {
+//   // buyStock('sh601988', 3.71, 200); // 中国银行
+//   // sellStock('sh601288', 3.91, 200); // 农业银行
+// });
 
