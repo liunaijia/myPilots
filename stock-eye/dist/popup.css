@@ -1,0 +1,12 @@
+input[type="text"] {
+  text-align: right;
+  width: 60px;
+}
+
+form.buy input {
+  color: red;
+}
+
+form.sell input {
+  color: green;
+}

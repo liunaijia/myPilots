@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js"></script>
+</head>
+
+<body>
+  <div id="debugWindow"></div>
+  <hr/>
+  <form class="buy">
+    <h4 class="stock"></h4>
+    <div>
+      价格 <input type="text" class="price">
+    </div>
+    <div>
+      数量 <input type="text" class="amount"> 可买 <label class="maxAmount">?</label>
+    </div>
+    <input type="submit" value="买入" />
+  </form>
+  <hr/>
+  <form class="sell">
+      <h4 class="stock"></h4>
+      <div>
+        价格 <input type="text" class="price">
+      </div>
+      <div>
+        数量 <input type="text" class="amount"> 可卖 <label class="maxAmount">?</label>
+      </div>
+      <input type="submit" value="卖出" />
+  </form>
+</body>
+
+</html>
