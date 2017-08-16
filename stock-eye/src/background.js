@@ -101,10 +101,23 @@ const createTradeSuggestion = () => {
   return suggestion;
 };
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === 'GET_HOLDINGS') { sendResponse(holdings); }
   if (request.type === 'GET_SUGGESTION') {
     sendResponse(createTradeSuggestion());
+  }
+  if (request.type === 'PLACE_ORDER') {
+    const payload = request.payload;
+    try {
+      if (payload.type === 'buy') {
+        await buyStock(payload.stockCode, payload.price, payload.amount);
+      } else if (payload.type === 'sell') {
+        await sellStock(payload.stockCode, payload.price, payload.amount);
+      }
+      sendNotification({ title: '下单成功', message: JSON.stringify(payload) });
+    } catch (error) {
+      sendNotification({ title: '下单失败', message: error.message });
+    }
   }
 });
 
