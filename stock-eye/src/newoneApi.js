@@ -162,18 +162,42 @@ const sellStock = async (stockCode = '', price = 0.0, amount = 0) => {
   }
 };
 
-const parseHoldings = async (response) => {
-  const dom = await readAsDom(response);
+const parseNumber = (str = '') => parseFloat(str.replace(/,|\s/g, ''));
+
+const parseHoldings = async (dom = new Document()) => {
   const balance = parseFloat(dom.querySelector('#zongzichan').innerText.match(/可用：\s*([\d|.]+)/)[1]);
+  const [, ...stockRows] = Array.from(dom.querySelectorAll('#tabbuy tr'));
+  const stocks = stockRows.map((row) => {
+    const cells = row.querySelectorAll('td');
+    const codePrefix = cells[0].attributes.scdm === '1' ? 'sh' : 'sz';
+    return {
+      stockCode: codePrefix + cells[0].attributes.zqdm.value,
+      stockName: cells[1].innerText,
+      stockAmount: parseNumber(cells[2].innerText),
+      sellableAmount: parseNumber(cells[3].innerText), // 可卖数量
+      cost: parseNumber(cells[5].innerText), // 成本价
+      floating: parseNumber(cells[6].innerText), // 浮动盈亏
+      floatingRate: cells[7].innerText, // 盈亏比例
+      boughtToday: parseNumber(cells[11].innerText), // 今买数量
+      soldToday: parseNumber(cells[12].innerText), // 今卖数量
+    };
+  });
   return {
     balance,
+    stocks,
   };
 };
 
-const holdings = async () => {
+const getHoldings = async () => {
   const response = await sendRequest(`/xtrade?random=${new Date().getTime()}`, { jybm: '100040' });
-  return parseHoldings(response);
+  const dom = await readAsDom(response);
+  if (dom.body.childElementCount === 0) {
+    await login();
+    return getHoldings();
+  }
+
+  return parseHoldings(dom);
 };
 
-export { login, buyStock, holdings, sellStock };
+export { login, buyStock, getHoldings, sellStock };
 
