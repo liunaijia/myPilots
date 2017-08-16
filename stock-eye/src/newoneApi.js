@@ -19,11 +19,33 @@ const sendRequest = async (url = '', payload = {}) => {
   return response;
 };
 
-const readResponse = async (response = new Response()) => {
-  const [, charset] = response.headers.get('Content-Type').match(/charset=(.*?)$/);
+const readContentType = (response = new Response()) => {
+  const contentType = response.headers.get('Content-Type');
+  const groups = contentType.match(/([^;]+)(;\s*charset=([^;]+))?(;\s*boundary=([^;]+))?/);
+  return { mimeType: groups[1], charset: groups[3], boundary: groups[5] };
+};
+
+const readAsText = async (response = new Response()) => {
+  const { charset } = readContentType(response);
   const bytes = await response.arrayBuffer();
   const text = decode(new Buffer(bytes), charset);
   return text;
+};
+
+const readAsDataUrl = async (response = new Response()) => {
+  const { mimeType } = readContentType(response);
+  const data = await response.arrayBuffer();
+  const base64String = btoa(String.fromCharCode(...new Uint8Array(data)));
+
+  return `data:${mimeType};base64,${base64String}`;
+};
+
+const readAsDom = async (response = new Response()) => {
+  const text = await readAsText(response);
+  const { mimeType } = readContentType(response);
+
+  const dom = new DOMParser().parseFromString(text, mimeType);
+  return dom;
 };
 
 const loadCaptcha = async () => {
@@ -32,11 +54,7 @@ const loadCaptcha = async () => {
     throw new Error(`fail to load captcha: ${response.statusText}`);
   }
 
-  const contentType = response.headers.get('Content-Type');
-  const data = await response.arrayBuffer();
-  const base64String = btoa(String.fromCharCode(...new Uint8Array(data)));
-
-  return `data:${contentType};base64,${base64String}`;
+  return readAsDataUrl(response);
 };
 
 const loadLoginForm = async () => {
@@ -45,10 +63,7 @@ const loadLoginForm = async () => {
     throw new Error(`fail to load login form: ${response.statusText}`);
   }
 
-  const text = await readResponse(response);
-  const mimeType = response.headers.get('Content-Type').split(';')[0];
-
-  const form = new DOMParser().parseFromString(text, mimeType).forms[0];
+  const form = (await readAsDom(response)).forms[0];
   const formData = Array.from(new FormData(form).entries()).reduce((acc, [key, value]) => {
     acc[key] = value;
     return acc;
@@ -67,7 +82,7 @@ const doLogin = async (payload, captcha) => {
     throw new Error(`fail to login: ${response.statusText}`);
   }
 
-  const [, charset] = response.headers.get('Content-Type').match(/charset=(.*?)$/);
+  const { charset } = readContentType(response);
   const bytes = await response.arrayBuffer();
   const text = decode(new Buffer(bytes), charset);
   return !text.includes('验证码输入错误');
@@ -81,12 +96,13 @@ const login = async () => {
   let captcha = 2;
   while (captcha <= 20) {
     if (await doLogin(formData, String(captcha))) { // eslint-disable-line no-await-in-loop
-      break;
+      sendNotification({ title: 'Login successful', message: `captcha is ${captcha}`, iconUrl: captchaImage });
+      return;
     }
     captcha += 1;
   }
 
-  sendNotification({ title: 'Login successful', message: `captcha is ${captcha}`, iconUrl: captchaImage });
+  throw new Error('fail to login: incorrect captcha');
 };
 
 const welcome = async () => {
@@ -95,21 +111,26 @@ const welcome = async () => {
     throw new Error(`fail to load welcome page: ${response.statusText}`);
   }
 
-  const text = await readResponse(response);
+  const text = await readAsText(response);
   console.log(text);
 };
 
 const buyStock = async (stockCode = '') => {
   const response = await sendRequest(`/newtrade/func/getWDData.jsp?random=${new Date().getTime()}`, { zqdm: stockCode });
-  const text = await readResponse(response);
+  const text = await readAsText(response);
   console.log(text);
+};
+
+const parseHoldings = async (response) => {
+  const dom = await readAsDom(response);
+  return dom;
 };
 
 const holdings = async () => {
   const response = await sendRequest(`/xtrade?random=${new Date().getTime()}`, { jybm: '100040' });
-  const text = await readResponse(response);
-  console.log(text);
+  return parseHoldings(response);
 };
+
 
 export { login, buyStock, holdings, welcome };
 
